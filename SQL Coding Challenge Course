@@ -1,0 +1,207 @@
+-- SQL Coding Challenge Course
+
+-- First challenge - get first name, last name, and email of customers in customer database ordered by last name to send an email blast to invite customers to a company party
+
+SELECT FirstName, LastName, Email
+FROM Customers
+Order BY LastName;
+
+-- Second challenge - create a table where the number of company party attendees can be tracked
+CREATE TABLE IF NOT EXISTS restaurant.Party_Attendees (
+    CustomerID INTEGER PRIMARY KEY NOT NULL,
+    Party_Size INTEGER NOT NULL);
+
+-- Third challenge - create three menus (one showing all items sorted by price low to high - one with appetizers and beverages only sorted by dish type - one with all menu items except beverages sorted by dish type
+-- "Menu 1"
+SELECT *
+FROM Dishes
+ORDER BY price;
+
+-- "Menu 2"
+SELECT *
+FROM Dishes
+WHERE type = 'Beverage' or type = 'Appetizer'
+ORDER BY type;
+
+-- "Menu 3"
+SELECT *
+FROM Dishes
+WHERE type <> 'Beverage'
+ORDER BY type;
+
+-- Fourth Challenge - Take information from a loyalty program customer sign up card and insert it into the customers table - CustomerID is auto-generated, so doesn't need to be included as a column
+
+INSERT INTO Customers 
+    (FirstName, LastName, Email, Address, City, State, Phone, Birthday)
+    VALUES
+    ('Anna', 'Smith', 'asmith@annasmith.com', '555 Main Street', 'Bronx', 'NY', '212-555-1234', '1997-08-05');
+
+-- Fifth Challenge - Update the new mailing address information of customer Taylor Jenkins of 27170 6th Center Washington, DC
+
+-- Finding Taylor Jenkins (small dataset, so I only looked by first name and city)
+SELECT *
+FROM Customers
+WHERE FirstName = 'Taylor' AND City = 'Washington'; -- Her customer ID is 26 - will use to update her record
+
+-- Updating her mailing address to 74 Pine St New York, NY
+UPDATE Customers
+SET Address = '74 Pine St',
+    City = 'New York',
+    State = 'NY'
+WHERE CustomerID = 26;
+
+SELECT *
+FROM Customers
+WHERE CustomerID = 26; -- checking udpate is correct
+
+-- Sixth challenge - delete the record of a loyalty program customer moving out of the area - customer's email address is tjenkins@rouxacademy.org
+
+-- Searching for customer to ensure only her record is deleted
+SELECT *
+FROM Customers
+WHERE Email = 'tjenkins@rouxacademy.org';
+
+-- Deleting record
+DELETE FROM Customers
+WHERE CustomerID = 4;
+
+-- Ensuring record is deleted
+SELECT *
+FROM Customers
+WHERE Email = 'tjenkins@rouxacademy.org';
+
+-- Seventh Challenge - Write an SQL statement adding the party size of a customer who emailed back about party attendance in continuation from challenge 2 above
+INSERT INTO Party_Attendees 
+    (CustomerID, Party_Size)
+    VALUES
+    ((SELECT CustomerID FROM Customers WHERE Email = 'atapley2j@kinetecoinc.com'), '4');
+ 
+-- Ensuring that the correct party size was sent to the correct customer / customer ID   
+SELECT *
+FROM Party_Attendees;
+
+SELECT *
+FROM Customers
+WHERE CustomerID = 92;
+
+-- Eigth Challenge - Search for a reservation last name Stephenson, but unsure of the spelling. Know the reservation date is June 14, 2020 and the party size is 4
+-- Didn't search by date becuase it's measured down to seconds
+SELECT c.FirstName, c.LastName, r.Date, r.PartySize
+FROM Customers AS c
+JOIN Reservations AS r
+ON c.CustomerId = r.CustomerID
+WHERE c.LastName LIKE 'Ste%'
+AND r.PartySize = 4;
+
+-- Ninth Challenge - Enter a reservation into the reservation table using customer info - Sam McAdams July 14, 2020 (5 people) smac@rouxacademy.com 555-555-1212
+-- Important note - must keep the same table schema for each table potentially used in this challenge
+SELECT *
+FROM Customers
+WHERE LastName = 'McAdams'; -- Ensuring that this customer is not already in our database
+
+INSERT INTO Customers (FirstName, LastName, Email, Phone)
+VALUES ('Sam', 'McAdams', 'smac@rouxacademy.com', '555-555-1212');
+
+SELECT *
+FROM Customers
+WHERE LastName = 'McAdams'; -- Ensuring customer was added to database
+
+SELECT Date -- Checking date format to ensure I input it correctly below
+FROM Reservations;
+
+SELECT ReservationID
+FROM Reservations; -- checking reservation ID's so I know which ID to give Sam's reservation
+
+INSERT INTO Reservations (ReservationID, CustomerID, Date, PartySize)
+VALUES ('1001', '102', '14-07-2020', '5');
+
+SELECT *
+FROM Reservations
+WHERE CustomerID = 102; -- Ensuring I inputted Sam's reservation correctly
+
+-- Tenth Challenge - Create an order (for delivery), Find the customer, create the order record, and find the total cost
+
+SELECT CustomerID,
+    FirstName,
+    LastName,
+    Phone
+FROM Customers
+WHERE LastName = 'Hundey'; -- Finding the correct customer and customer ID for the order
+
+SELECT *
+FROM Orders; -- checking order format to ensure I input it correctly below
+
+INSERT INTO Orders (OrderID, CustomerID, OrderDate)
+VALUES ('1001', '70', '2022-03-01 19:30:00');
+
+SELECT *
+FROM Orders
+WHERE CustomerID = 70; -- ensuring order was inputted correctly
+
+SELECT *
+FROM OrdersDishes; -- checking info and format of orders dishes, so I can input it correctly below (this is different in the sense that it is dishes only for certain orders - not the menu
+
+SELECT *
+FROM Dishes; -- checking info and format of dishes, so I can input it correctly below
+
+INSERT INTO OrdersDishes (OrdersDishesID, OrderID, DishID) -- -- creating the OrdersDishes for the delivery order
+VALUES ('1', '1001', '7'), 
+       ('2', '1001', '4'),
+       ('3', '1001', '20');
+       
+SELECT *
+FROM OrdersDishes
+WHERE OrderID = 1001; -- checking order
+
+SELECT SUM(d.Price)
+FROM Dishes as d
+JOIN OrdersDishes as o
+ON d.DishID = o.DishID
+WHERE OrderID = 1001; -- total for the order
+
+-- Eleventh challenge - set Cleo Goldwater's favorite dish to Quinoa Salmon Salad
+
+SELECT *
+FROM Customers
+WHERE LastName = 'Goldwater'; -- ensuring Cleo and her favorite dish are not already in the database
+
+-- Database shows Cleo's favorite dish is DishID 14 - checking what that is and Cleo's Customer ID is 42
+
+SELECT *
+FROM Dishes
+WHERE DishID = 14; -- Dish 14 is the fiesta family platter
+
+SELECT *
+FROM Dishes
+WHERE Name = 'Quinoa Salmon Salad'; -- checking for the DishID of the quiona salad, so I can update Cleo's record
+
+-- Quiona Salmon Salad is DishID 9
+
+UPDATE Customers -- updating her favorite dish
+SET FavoriteDish = 9
+WHERE CustomerID = 42;
+
+SELECT *
+FROM Customers
+WHERE CustomerID = 42; -- ensuring I successfully updated Cleo's favorite dish
+
+-- Twelfth challenge - choose top 5 customers (by number of to-go orders) to send a 15% coupon. Need number of orders, email, first and last name. Sort by number of orders.
+
+SELECT CustomerID,
+COUNT(CustomerID)
+FROM Orders
+GROUP BY CustomerID
+ORDER BY COUNT(CustomerID) DESC; -- Shows the number of orders for each customer (by customer ID) -- now need the names
+
+SELECT c.FirstName,
+c.LastName,
+c.Email,
+COUNT(o.CustomerID) as OrderCount
+FROM Customers as c
+JOIN Orders as o
+ON c.CustomerID = o.CustomerID
+GROUP BY o.CustomerID
+ORDER BY OrderCount DESC
+LIMIT 6; -- shows first name, last name, and number of to-go orders placed by each customer and stops at the top 5 (yes 6 is set as the limit but only becuase there's a tie for 5th)
+
+
